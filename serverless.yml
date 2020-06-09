@@ -1,0 +1,45 @@
+service:
+  name: aws-node-typescript-sqs-standard
+
+plugins:
+  - serverless-webpack
+
+app: june-9-2020
+org: davidraleche
+
+provider:
+  # you can overwrite defaults here
+  stage: dev
+  region: us-west-1
+
+  name: aws
+  runtime: nodejs10.x
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - sqs:SendMessage
+      Resource:
+        - Fn::GetAtt: [ receiverQueue, Arn ]
+      
+functions:
+  sender:
+    handler: handler.sender
+    events:
+      - http:
+          method: post
+          path: sender
+
+  receiver:
+    handler: handler.receiver
+    events:
+      - sqs:
+          arn:
+            Fn::GetAtt:
+              - receiverQueue
+              - Arn
+resources:
+  Resources:
+    receiverQueue:
+      Type: AWS::SQS::Queue
+      Properties:
+        QueueName: receiverQueue
